@@ -20,3 +20,17 @@ Clone do aplicativo Nubank desenvolvido usando React Native e Expo
 
 
 
+
+---
+
+## 👨‍💻 Mantido por
+
+Fork/adaptação mantida por **Alex Junior (alequizao)** — Analista e Desenvolvedor de
+Sistemas em **Maceió, Alagoas, Brasil**. Os créditos do projeto original permanecem com
+seus autores; aqui ficam as modificações, correções e a versão em produção.
+Programador na **Publish Digital**.
+
+- **E-mail:** alequizao.dev@gmail.com
+- **WhatsApp:** [(82) 98871-7072](https://wa.me/5582988717072)
+- **Instagram:** [@alequizao](https://instagram.com/alequizao)
+- **GitHub:** [@alequizao](https://github.com/alequizao) · [perfil completo](https://github.com/alequizao/alequizao)
