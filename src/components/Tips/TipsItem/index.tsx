@@ -3,18 +3,18 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
 	container: {
-		backgroundColor: "#efefef",
-		padding: 8,
-		width: 280,
-		height: 88,
-		borderRadius: 340 / 20,
-		display: "flex",
-		alignItems: "flex-start",
+		backgroundColor: "#F4F4F5",
+		width: 250,
+		minHeight: 96,
+		borderRadius: 14,
+		paddingHorizontal: 18,
+		paddingVertical: 16,
 		justifyContent: "center",
 	},
 	newsText: {
-		margin: 16,
-		fontSize: 16,
+		fontSize: 15,
+		lineHeight: 21,
+		color: "#111111",
 	},
 });
 

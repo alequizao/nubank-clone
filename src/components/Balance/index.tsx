@@ -2,43 +2,35 @@ import React from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { StackParamList } from "../../../App";
+import { useApp } from "../../estado/AppContexto";
+import { reais } from "../../servicos/formato";
+import { tema } from "../../tema";
 
 const styles = StyleSheet.create({
-	container: { padding: 20 },
-	upperContent: {
-		display: "flex",
-		flexDirection: "row",
-		justifyContent: "space-between",
-	},
-	defaultText: {
-		fontSize: 20,
-		fontWeight: "600",
-	},
+	container: { paddingHorizontal: 22, paddingTop: 22, paddingBottom: 6 },
+	linha: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+	titulo: { fontSize: 18, fontWeight: "600", color: tema.texto },
+	valor: { fontSize: 22, fontWeight: "600", color: tema.texto, marginTop: 10 },
+	oculto: { fontSize: 22, fontWeight: "600", color: tema.suave, marginTop: 10, letterSpacing: 3 },
 });
 
-type balanceScreenProp = StackNavigationProp<StackParamList, "BalancePage">;
-interface Props {
-	balanceValue: number;
-}
+const Balance: React.FC = () => {
+	const navigation = useNavigation<any>();
+	const { estado, mostrarValores } = useApp();
+	const saldo = estado?.perfil.saldo ?? 0;
 
-const Balance: React.FC<Props> = ({ balanceValue }) => {
-	const navigation = useNavigation<balanceScreenProp>();
 	return (
 		<View style={styles.container}>
-			<TouchableOpacity
-				onPress={() =>
-					navigation.navigate("BalancePage", { balanceValue })
-				}
-			>
-				<View style={styles.upperContent}>
-					<Text style={styles.defaultText}>Conta</Text>
-					<Feather name="chevron-right" size={24} color="black" />
+			<TouchableOpacity onPress={() => navigation.navigate("BalancePage")}>
+				<View style={styles.linha}>
+					<Text style={styles.titulo}>Conta</Text>
+					<Feather name="chevron-right" size={22} color={tema.texto} />
 				</View>
-				<Text style={styles.defaultText}>
-					R$ {String(balanceValue).replace(".", ",")}
-				</Text>
+				{mostrarValores ? (
+					<Text style={styles.valor}>{reais(saldo)}</Text>
+				) : (
+					<Text style={styles.oculto}>••••••</Text>
+				)}
 			</TouchableOpacity>
 		</View>
 	);

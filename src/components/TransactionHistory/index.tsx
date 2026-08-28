@@ -1,98 +1,27 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import TransactionCard from "./TransactionCard";
+import { useApp } from "../../estado/AppContexto";
+import { tema } from "../../tema";
 
 const styles = StyleSheet.create({
-	container: {
-		display: "flex",
-		flexDirection: "column",
-		marginTop: 24,
-	},
-	historyText: {
-		fontSize: 20,
-		fontWeight: "500",
-		marginBottom: 24,
-	},
+	container: { marginTop: 28 },
+	titulo: { fontSize: 18, fontWeight: "600", color: tema.texto, marginBottom: 6 },
+	vazio: { color: tema.suave, fontSize: 14, paddingVertical: 20 },
 });
 
-const TransactionHistory: React.FC = () => {
+const TransactionHistory: React.FC<{ apenas?: "conta" | "credito" }> = ({ apenas }) => {
+	const { estado, mostrarValores } = useApp();
+	const lista = (estado?.transacoes || []).filter((t) => !apenas || t.origem === apenas);
+
 	return (
 		<View style={styles.container}>
-			<Text style={styles.historyText}>Histórico</Text>
-			<ScrollView showsVerticalScrollIndicator={false}>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-				<TransactionCard
-					name="Transferência enviada"
-					desc={`ShopeePay
-PIX
-R$ 24,99 `}
-					icon="dollar-sign"
-					date="06 JUN"
-				/>
-			</ScrollView>
+			<Text style={styles.titulo}>Histórico</Text>
+			{lista.length === 0 ? (
+				<Text style={styles.vazio}>Nenhum lançamento ainda.</Text>
+			) : (
+				lista.map((t) => <TransactionCard key={t.id} transacao={t} ocultar={!mostrarValores} />)
+			)}
 		</View>
 	);
 };

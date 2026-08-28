@@ -1,30 +1,48 @@
 {
   "expo": {
-    "name": "nubank-clone",
-    "slug": "nubank-clone",
+    "name": "Nubank",
+    "slug": "nubank",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "primaryColor": "#820AD1",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#820AD1"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.alequizao.nubank"
     },
     "android": {
+      "package": "com.alequizao.nubank",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#820AD1"
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Nubank",
+      "shortName": "Nubank",
+      "description": "Nubank - sua conta, seu cartão e seus limites em um só lugar.",
+      "lang": "pt-BR",
+      "themeColor": "#820AD1",
+      "backgroundColor": "#820AD1",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/",
+      "scope": "/",
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#820AD1"
+      }
     }
   }
 }

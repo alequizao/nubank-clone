@@ -1,39 +1,30 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { tema } from "../../tema";
 
 const styles = StyleSheet.create({
-	container: {
-		backgroundColor: "#efefef",
-		width: 340,
-		height: 60,
-		margin: 20,
-		borderRadius: 340 / 20,
-		display: "flex",
-		alignItems: "flex-start",
-		justifyContent: "center",
-	},
-	content: {
-		padding: 16,
-		marginLeft: 8,
+	botao: {
+		marginHorizontal: 22,
+		marginTop: 18,
+		backgroundColor: tema.cinza,
+		borderRadius: 12,
+		paddingVertical: 16,
+		paddingHorizontal: 18,
 		flexDirection: "row",
+		alignItems: "center",
 		gap: 12,
 	},
-	cardText: {
-		fontWeight: "600",
-		fontSize: 16,
-	},
+	texto: { fontWeight: "600", fontSize: 15, color: tema.texto },
 });
 
 const AllMyCards: React.FC = () => {
+	const navigation = useNavigation<any>();
 	return (
-		<TouchableOpacity>
-			<View style={styles.container}>
-				<View style={styles.content}>
-					<Feather name="credit-card" size={24} color="black" />
-					<Text style={styles.cardText}> Meus Cartões </Text>
-				</View>
-			</View>
+		<TouchableOpacity style={styles.botao} onPress={() => navigation.navigate("CartaoPage")}>
+			<Feather name="credit-card" size={20} color={tema.texto} />
+			<Text style={styles.texto}>Meus cartões</Text>
 		</TouchableOpacity>
 	);
 };

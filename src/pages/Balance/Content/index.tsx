@@ -1,50 +1,66 @@
 import React from "react";
 import { View, StyleSheet, Text, ScrollView } from "react-native";
-import { RouteProp } from "@react-navigation/native";
-import { StackParamList } from "../../../../App";
-import { useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import ArrowButton from "../../../components/ArrowButton";
 import TransactionHistory from "../../../components/TransactionHistory";
+import { useApp } from "../../../estado/AppContexto";
+import { reais } from "../../../servicos/formato";
+import { tema } from "../../../tema";
 
 const styles = StyleSheet.create({
-	container: {
-		paddingLeft: 20,
-		paddingRight: 20,
-		display: "flex",
-		flexDirection: "column",
-	},
-	availableValue: {
-		color: "#9c9fa8",
-		fontWeight: "600",
-		fontSize: 12,
-	},
-	valueText: {
-		fontWeight: "600",
-		fontSize: 24,
-	},
+	container: { paddingHorizontal: 22, paddingBottom: 60 },
+	rotulo: { color: tema.suave, fontSize: 13, fontWeight: "500" },
+	valor: { fontWeight: "700", fontSize: 28, color: tema.texto, marginTop: 4, marginBottom: 10 },
 });
 
 const Content: React.FC = () => {
-	const route = useRoute<RouteProp<StackParamList, "Balance">>();
+	const navigation = useNavigation<any>();
+	const { estado, mostrarValores } = useApp();
+	const p = estado?.perfil;
+
 	return (
 		<ScrollView showsVerticalScrollIndicator={false}>
 			<View style={styles.container}>
-				<View>
-					<Text style={styles.availableValue}>Saldo disponível</Text>
-					<Text style={styles.valueText}>
-						R${" "}
-						{route.params?.balanceValue
-							? String(route.params.balanceValue).replace(
-									".",
-									","
-							  )
-							: "0,00"}
-					</Text>
-				</View>
-				<ArrowButton name="Movimentações do mês" icon="shuffle" />
-				<ArrowButton name="Dinheiro guardado" icon="dollar-sign" />
-				<ArrowButton name="Rendimento total da conta" icon="activity" />
-				<TransactionHistory />
+				<Text style={styles.rotulo}>Saldo disponível</Text>
+				<Text style={styles.valor}>{mostrarValores ? reais(p?.saldo ?? 0) : "••••••"}</Text>
+
+				<ArrowButton
+					name="Movimentações do mês"
+					icon="shuffle"
+					value={`${estado?.transacoes.length ?? 0} lançamentos`}
+				/>
+				<ArrowButton
+					name="Dinheiro guardado"
+					icon="dollar-sign"
+					value={reais(p?.guardado ?? 0)}
+					onPress={() =>
+						navigation.navigate("OperacaoPage", {
+							acao: "guardar",
+							titulo: "Guardar dinheiro",
+							subtitulo: "Separar um valor do saldo",
+							pedeNome: false,
+						})
+					}
+				/>
+				<ArrowButton
+					name="Rendimento total da conta"
+					icon="activity"
+					value={reais(p?.rendimento_mes ?? 0)}
+				/>
+				<ArrowButton
+					name="Fazer um Pix"
+					icon="codepen"
+					onPress={() =>
+						navigation.navigate("OperacaoPage", {
+							acao: "pix_enviar",
+							titulo: "Pix",
+							subtitulo: "Para quem você quer transferir?",
+							pedeNome: true,
+						})
+					}
+				/>
+
+				<TransactionHistory apenas="conta" />
 			</View>
 		</ScrollView>
 	);

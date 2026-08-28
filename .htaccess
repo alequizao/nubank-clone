@@ -1,0 +1,17 @@
+DirectoryIndex index.php index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Esconde o index.php da URL: /index.php -> /
+    RewriteCond %{THE_REQUEST} \s/+(.*?)index\.php[\s?/] [NC]
+    RewriteRule ^ /%1 [R=301,L]
+
+    # Bloqueia acesso direto ao código-fonte e às dependências
+    RewriteRule ^(backend|src|node_modules|screenshots)/ - [F,L]
+    RewriteRule ^(package\.json|yarn\.lock|tsconfig\.json|babel\.config\.js|app\.json|App\.tsx)$ - [F,L]
+</IfModule>
+
+<FilesMatch "\.(sql|log|md)$">
+    Require all denied
+</FilesMatch>

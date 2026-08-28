@@ -2,55 +2,39 @@ import React from "react";
 import { View, StyleSheet, StatusBar, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { StackParamList } from "../../../App";
+import { tema } from "../../tema";
 
-const statusBarHeight = StatusBar.currentHeight
-	? StatusBar.currentHeight + 8
-	: 36;
+const alturaBarra = StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 22;
 
 const styles = StyleSheet.create({
 	container: {
-		paddingTop: statusBarHeight,
-		paddingBottom: 20,
-		paddingLeft: 20,
-		paddingRight: 20,
-		display: "flex",
-		flexDirection: "column",
-	},
-	upperContent: {
-		display: "flex",
+		paddingTop: alturaBarra,
+		paddingBottom: 16,
+		paddingHorizontal: 22,
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
 	},
-	upperRightContent: {
-		display: "flex",
-		flexDirection: "row",
-		justifyContent: "space-between",
-		gap: 20,
-	},
 });
 
-type balanceScreenProp = StackNavigationProp<StackParamList, "Balance">;
-interface NavigationProps {
-	screen: string;
+interface Props {
+	screen?: string;
 }
 
-const NavigationHeader: React.FC<NavigationProps> = ({ screen }) => {
-	const navigation = useNavigation<balanceScreenProp>();
+const NavigationHeader: React.FC<Props> = ({ screen }) => {
+	const navigation = useNavigation<any>();
+	const voltar = () => {
+		if (navigation.canGoBack()) navigation.goBack();
+		else navigation.navigate(screen || "HomePage");
+	};
 	return (
 		<View style={styles.container}>
-			<View style={styles.upperContent}>
-				<TouchableOpacity onPress={() => navigation.navigate(screen)}>
-					<Feather name="chevron-left" size={24} />
-				</TouchableOpacity>
-				<View style={styles.upperRightContent}>
-					<TouchableOpacity>
-						<Feather name="help-circle" size={24} />
-					</TouchableOpacity>
-				</View>
-			</View>
+			<TouchableOpacity onPress={voltar}>
+				<Feather name="chevron-left" size={24} color={tema.texto} />
+			</TouchableOpacity>
+			<TouchableOpacity onPress={() => navigation.navigate("PerfilPage")}>
+				<Feather name="help-circle" size={22} color={tema.texto} />
+			</TouchableOpacity>
 		</View>
 	);
 };

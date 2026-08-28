@@ -1,55 +1,50 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useApp } from "../../estado/AppContexto";
+import { reais } from "../../servicos/formato";
+import { tema } from "../../tema";
 
 const styles = StyleSheet.create({
-	container: { display: "flex", gap: 4 },
-	content: { margin: 20 },
-	upperContent: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		marginBottom: 2,
-	},
-	defaultText: {
-		fontSize: 20,
-		fontWeight: "600",
-	},
-	availableValue: {
-		color: "#9c9fa8",
-		fontWeight: "400",
-		fontSize: 14,
-		marginBottom: 2,
-	},
+	separador: { height: 1, backgroundColor: tema.linha },
+	conteudo: { paddingHorizontal: 22, paddingVertical: 22 },
+	linha: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+	titulo: { fontSize: 18, fontWeight: "600", color: tema.texto },
+	texto: { color: tema.suave, fontSize: 14, marginTop: 10 },
+	valor: { fontSize: 18, fontWeight: "600", color: tema.texto, marginTop: 2 },
 });
 
-interface Props {
-	loanValue: number;
-}
+const Loan: React.FC = () => {
+	const navigation = useNavigation<any>();
+	const { estado, mostrarValores } = useApp();
+	const p = estado?.perfil;
 
-const Loan: React.FC<Props> = ({ loanValue }) => {
 	return (
-		<View style={styles.container}>
-			<View
-				style={{
-					borderBottomColor: "#f5f5f5",
-					borderBottomWidth: StyleSheet.hairlineWidth,
-				}}
-			/>
-			<TouchableOpacity>
-				<View style={styles.content}>
-					<View style={styles.upperContent}>
-						<Text style={styles.defaultText}>Empréstimo</Text>
-						<Feather name="chevron-right" size={24} color="black" />
+		<View>
+			<View style={styles.separador} />
+			<TouchableOpacity
+				onPress={() =>
+					navigation.navigate("OperacaoPage", {
+						acao: "contratar_emprestimo",
+						titulo: "Empréstimo",
+						subtitulo: "Contratar e receber na conta",
+						pedeNome: false,
+					})
+				}
+			>
+				<View style={styles.conteudo}>
+					<View style={styles.linha}>
+						<Text style={styles.titulo}>Empréstimo</Text>
+						<Feather name="chevron-right" size={22} color={tema.texto} />
 					</View>
-					<Text style={styles.availableValue}>
-						Valor disponível de até
+					<Text style={styles.texto}>Valor disponível de até</Text>
+					<Text style={styles.valor}>
+						{mostrarValores ? reais(p?.emprestimo_disponivel ?? 0) : "••••••"}
 					</Text>
-					<Text style={styles.availableValue}>
-						R${" "}
-						{loanValue
-							? String(loanValue).replace(".", ",")
-							: "0,00"}
-					</Text>
+					{!!p?.emprestimo_contratado && (
+						<Text style={styles.texto}>Já contratado: {reais(p.emprestimo_contratado)}</Text>
+					)}
 				</View>
 			</TouchableOpacity>
 		</View>

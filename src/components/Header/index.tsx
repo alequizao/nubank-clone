@@ -1,90 +1,71 @@
 import React from "react";
-import {
-	View,
-	StyleSheet,
-	Text,
-	StatusBar,
-	TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, Text, StatusBar, TouchableOpacity, Image } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { useApp } from "../../estado/AppContexto";
+import { tema } from "../../tema";
 
-const statusBarHeight = StatusBar.currentHeight
-	? StatusBar.currentHeight + 8
-	: 36;
+const alturaBarra = StatusBar.currentHeight ? StatusBar.currentHeight + 12 : 28;
 
 const styles = StyleSheet.create({
 	container: {
-		backgroundColor: "#841ecd",
-		paddingTop: statusBarHeight,
-		paddingBottom: 24,
-		paddingLeft: 20,
-		paddingRight: 20,
-		display: "flex",
-		flexDirection: "column",
+		backgroundColor: tema.roxo,
+		paddingTop: alturaBarra,
+		paddingBottom: 22,
+		paddingHorizontal: 22,
 	},
-	defaultText: {
-		color: "#ffffff",
-	},
-	welcomeText: {
-		color: "#ffffff",
-		fontSize: 20,
-		fontWeight: "600",
-	},
-	upperContent: {
-		display: "flex",
+	linhaTopo: {
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
 	},
-	lowerContent: {
-		paddingTop: 24,
-	},
-	uperRightContent: {
-		display: "flex",
-		flexDirection: "row",
-		justifyContent: "space-between",
-		gap: 20,
-	},
-	circleShape: {
-		width: 48,
-		height: 48,
-		borderRadius: 48 / 2,
-		backgroundColor: "#8e29d1",
+	avatar: {
+		width: 44,
+		height: 44,
+		borderRadius: 22,
+		backgroundColor: tema.roxoClaro,
 		justifyContent: "center",
 		alignItems: "center",
+		overflow: "hidden",
+	},
+	foto: { width: 44, height: 44 },
+	icones: { flexDirection: "row", alignItems: "center", gap: 24 },
+	saudacao: {
+		color: tema.branco,
+		fontSize: 20,
+		fontWeight: "600",
+		marginTop: 22,
 	},
 });
 
-interface Props {
-	user?: string;
-}
+const Header: React.FC = () => {
+	const navigation = useNavigation<any>();
+	const { estado, mostrarValores, alternarValores } = useApp();
+	const perfil = estado?.perfil;
 
-const Header: React.FC<Props> = ({ user }) => {
 	return (
 		<View style={styles.container}>
-			<View style={styles.upperContent}>
-				<TouchableOpacity style={styles.circleShape}>
-					<Feather name="user" size={24} color="#ffffff" />
+			<View style={styles.linhaTopo}>
+				<TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate("PerfilPage")}>
+					{perfil?.foto ? (
+						<Image source={{ uri: perfil.foto }} style={styles.foto} />
+					) : (
+						<Feather name="user" size={22} color={tema.branco} />
+					)}
 				</TouchableOpacity>
-				<View style={styles.uperRightContent}>
-					<TouchableOpacity>
-						<Feather name="eye" size={24} color="#ffffff" />
+				<View style={styles.icones}>
+					<TouchableOpacity onPress={alternarValores}>
+						<Feather name={mostrarValores ? "eye" : "eye-off"} size={22} color={tema.branco} />
 					</TouchableOpacity>
-					<TouchableOpacity>
-						<Feather name="help-circle" size={24} color="#ffffff" />
+					<TouchableOpacity onPress={() => navigation.navigate("PerfilPage")}>
+						<Feather name="help-circle" size={22} color={tema.branco} />
 					</TouchableOpacity>
-					<TouchableOpacity>
-						<Feather name="mail" size={24} color="#ffffff" />
+					<TouchableOpacity onPress={() => navigation.navigate("BalancePage")}>
+						<Feather name="mail" size={22} color={tema.branco} />
 					</TouchableOpacity>
 				</View>
 			</View>
-			{user ? (
-				<View style={styles.lowerContent}>
-					<Text style={styles.welcomeText}>Olá, {user}!</Text>
-				</View>
-			) : (
-				<View />
-			)}
+			<Text style={styles.saudacao}>Olá, {perfil?.nome || "..."}</Text>
 		</View>
 	);
 };

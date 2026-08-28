@@ -19,34 +19,45 @@ import { EdgeInsets } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 
 const styles = StyleSheet.create({
-	container: { justifyContent: "center", alignItems: "center" },
+	// A barra fica presa ao rodapé da tela, centralizada e sempre por cima —
+	// sem isso ela ficava sobrepondo os cards no mobile.
+	container: {
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 0,
+		alignItems: "center",
+		paddingBottom: Platform.OS === "ios" ? 26 : 16,
+		backgroundColor: "transparent",
+	},
 	content: {
 		flexDirection: "row",
-		margin: Platform.OS === "ios" ? 38 : 24,
 		alignItems: "center",
 		justifyContent: "center",
-		position: "absolute",
-		bottom: 0,
-		backgroundColor: "rgba(255, 255, 255, 0.7)",
-		gap: 8,
-		elevation: 10,
-		shadowColor: "#000",
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.2,
-		shadowRadius: 3.8,
+		gap: 10,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+		backgroundColor: "#ffffff",
 		borderRadius: 48,
+		borderWidth: StyleSheet.hairlineWidth,
+		borderColor: "#EDEDED",
+		elevation: 8,
+		shadowColor: "#000",
+		shadowOffset: { width: 0, height: 3 },
+		shadowOpacity: 0.16,
+		shadowRadius: 10,
 	},
 	buttonTab: {
 		justifyContent: "center",
 		alignItems: "center",
-		padding: 8,
+		padding: 4,
 	},
 	innerButton: {
-		padding: 8,
-		borderRadius: 23, //(34*icon-size* + 8*padding* + 4*padding*) / 2 = 21
+		width: 46,
+		height: 46,
+		borderRadius: 23,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 });
 
@@ -122,7 +133,7 @@ const TabBar: React.FC<Props> = ({ state, descriptors, navigation }) => {
 											? "attach-money"
 											: "storefront"
 									}
-									size={34}
+									size={28}
 									color={isFocused ? "#8f2adb" : "#535353"}
 								/>
 							</View>

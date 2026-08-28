@@ -1,42 +1,41 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { tema } from "../../tema";
 
 const styles = StyleSheet.create({
 	container: {
-		display: "flex",
-		flexDirection: "column",
-		marginTop: 24,
-	},
-	upperContainer: {
 		flexDirection: "row",
 		justifyContent: "space-between",
+		alignItems: "center",
+		paddingVertical: 16,
+		borderBottomWidth: 1,
+		borderBottomColor: tema.linha,
 	},
-	upperLeftContainer: {
-		flexDirection: "row",
-	},
-	styledText: {
-		marginLeft: 8,
-	},
+	esquerda: { flexDirection: "row", alignItems: "center", gap: 12 },
+	nome: { fontSize: 15, color: tema.texto },
+	valor: { fontSize: 15, color: tema.suave, marginRight: 8 },
+	direita: { flexDirection: "row", alignItems: "center" },
 });
 
 interface Props {
 	name: string;
-	icon: "activity" | "dollar-sign" | "shuffle";
+	icon: any;
+	value?: string;
+	onPress?: () => void;
 }
 
-const ArrowButton: React.FC<Props> = ({ name, icon }) => {
-	return (
-		<TouchableOpacity style={styles.container}>
-			<View style={styles.upperContainer}>
-				<View style={styles.upperLeftContainer}>
-					<Feather name={icon} size={24} color="black" />
-					<Text style={styles.styledText}>{name}</Text>
-				</View>
-				<Feather name="chevron-right" size={24} color="black" />
-			</View>
-		</TouchableOpacity>
-	);
-};
+const ArrowButton: React.FC<Props> = ({ name, icon, value, onPress }) => (
+	<TouchableOpacity style={styles.container} onPress={onPress}>
+		<View style={styles.esquerda}>
+			<Feather name={icon} size={20} color={tema.texto} />
+			<Text style={styles.nome}>{name}</Text>
+		</View>
+		<View style={styles.direita}>
+			{!!value && <Text style={styles.valor}>{value}</Text>}
+			<Feather name="chevron-right" size={20} color={tema.suave} />
+		</View>
+	</TouchableOpacity>
+);
 
 export default ArrowButton;
