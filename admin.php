@@ -61,6 +61,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ok = 'Cartão criado.';
             }
             $aba = 'cartoes';
+        } elseif ($form === 'pix') {
+            $sub = isset($_POST['sub']) ? $_POST['sub'] : '';
+            if ($sub === 'limites') {
+                $ok = operar('pix_limites', ['limite_diario' => n($_POST['limite_diario']), 'limite_noturno' => n($_POST['limite_noturno'])]);
+            } elseif ($sub === 'chave_criar') {
+                $ok = operar('pix_chave_criar', ['tipo' => $_POST['tipo'], 'chave' => $_POST['chave']]);
+            } elseif ($sub === 'chave_excluir') {
+                $ok = operar('pix_chave_excluir', ['chave_id' => (int) $_POST['id']]);
+            } elseif ($sub === 'chave_principal') {
+                $ok = operar('pix_chave_principal', ['chave_id' => (int) $_POST['id']]);
+            } elseif ($sub === 'agendar') {
+                $ok = operar('pix_agendar', ['valor' => n($_POST['valor']), 'nome' => $_POST['nome'],
+                    'descricao' => $_POST['descricao'], 'data' => $_POST['data'], 'repete' => $_POST['repete']]);
+            } elseif ($sub === 'agendado_cancelar') {
+                $ok = operar('pix_agendado_cancelar', ['agendado_id' => (int) $_POST['id']]);
+            } elseif ($sub === 'cobranca_receber') {
+                $ok = operar('pix_cobranca_receber', ['cobranca_id' => (int) $_POST['id'], 'nome' => $_POST['nome']]);
+            } elseif ($sub === 'cobranca_cancelar') {
+                $ok = operar('pix_cobranca_cancelar', ['cobranca_id' => (int) $_POST['id']]);
+            }
+            $aba = 'pix';
         } elseif ($form === 'caixinha') {
             if (!empty($_POST['excluir'])) {
                 $ok = operar('caixinha_excluir', ['caixinha_id' => (int) $_POST['excluir']]);
@@ -112,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'valor'       => n($_POST['valor']),
                 'nome'        => $_POST['nome'],
                 'descricao'   => $_POST['descricao'],
+                'codigo'      => $_POST['descricao'],
                 'caixinha_id' => isset($_POST['caixinha_id']) ? (int) $_POST['caixinha_id'] : 0,
             ]);
             $aba = 'simular';
@@ -129,6 +151,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $p          = perfil();
 $listaCaixinhas = caixinhas();
+$pixChaves    = pix_chaves();
+$pixAgendados = pix_agendados();
+$pixCobrancas = pix_cobrancas(50);
 $cartoes    = cartoes();
 $contatos   = contatos();
 $transacoes = transacoes(200);
@@ -138,6 +163,7 @@ function m($v) { return number_format((float) $v, 2, ',', '.'); }
 
 $abas = [
     'perfil'   => 'Perfil e saldos',
+    'pix'       => 'Área Pix',
     'caixinhas' => 'Caixinhas',
     'cartoes'  => 'Cartões',
     'contatos' => 'Contatos',
@@ -310,6 +336,104 @@ $abas = [
     </form>
   </div>
 
+<?php elseif ($aba === 'pix'): ?>
+  <h2>Área Pix</h2>
+  <p class="desc">Chaves, limites, agendamentos e cobranças. Os agendamentos executam sozinhos quando o app abre na data.</p>
+
+  <div class="card">
+    <h3>Limites</h3>
+    <form method="post">
+      <input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="limites">
+      <div class="grade">
+        <div><label>Limite diário (R$)</label><input name="limite_diario" value="<?= m($p['limite_pix_diario']) ?>"></div>
+        <div><label>Limite noturno por Pix, 20h–6h (R$)</label><input name="limite_noturno" value="<?= m($p['limite_pix_noturno']) ?>"></div>
+        <div><label>Enviado hoje</label><div style="padding:10px 0;font-weight:600">R$ <?= m(pix_enviado_hoje()) ?></div></div>
+      </div>
+      <div class="acoes"><button type="submit">Salvar limites</button></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Chaves (<?= count($pixChaves) ?>/5)</h3>
+    <table>
+      <tr><th>Tipo</th><th>Chave</th><th>Principal</th><th></th></tr>
+      <?php foreach ($pixChaves as $c): ?>
+      <tr>
+        <td><?= pix_tipo_rotulo($c['tipo']) ?></td>
+        <td><code><?= h($c['valor']) ?></code></td>
+        <td><?php if ($c['principal']): ?><span class="chip">principal</span><?php else: ?>
+          <form method="post"><input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="chave_principal"><input type="hidden" name="id" value="<?= $c['id'] ?>">
+          <button class="sec" type="submit" style="color:#374151;border-color:#e6e6ec">Tornar principal</button></form><?php endif; ?></td>
+        <td><form method="post" onsubmit="return confirm('Excluir a chave?')"><input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="chave_excluir"><input type="hidden" name="id" value="<?= $c['id'] ?>">
+          <button class="sec" type="submit">Excluir</button></form></td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    <form method="post" style="margin-top:18px">
+      <input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="chave_criar">
+      <div class="grade">
+        <div><label>Tipo</label><select name="tipo">
+          <option value="">Detectar pelo formato</option>
+          <option value="cpf">CPF</option><option value="cnpj">CNPJ</option><option value="email">E-mail</option>
+          <option value="telefone">Celular</option><option value="aleatoria">Aleatória (gerar)</option></select></div>
+        <div><label>Chave</label><input name="chave" placeholder="deixe vazio para aleatória"></div>
+      </div>
+      <div class="acoes"><button type="submit">Cadastrar chave</button></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Agendamentos</h3>
+    <table>
+      <tr><th>Data</th><th>Destinatário</th><th>Valor</th><th>Repete</th><th>Status</th><th></th></tr>
+      <?php foreach ($pixAgendados as $a): ?>
+      <tr>
+        <td><?= date('d/m/Y', strtotime($a['data_agendada'])) ?></td>
+        <td><?= h($a['nome']) ?><?= $a['descricao'] ? '<br><span class="chip">' . h($a['descricao']) . '</span>' : '' ?></td>
+        <td>R$ <?= m($a['valor']) ?></td>
+        <td><?= $a['repete'] === 'nao' ? '—' : h($a['repete']) ?></td>
+        <td><?= h($a['status']) ?><?= $a['motivo_falha'] ? '<br><small>' . h($a['motivo_falha']) . '</small>' : '' ?></td>
+        <td><?php if (in_array($a['status'], ['agendado', 'falhou'])): ?>
+          <form method="post"><input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="agendado_cancelar"><input type="hidden" name="id" value="<?= $a['id'] ?>">
+          <button class="sec" type="submit">Cancelar</button></form><?php endif; ?></td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    <form method="post" style="margin-top:18px">
+      <input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="agendar">
+      <div class="grade">
+        <div><label>Destinatário</label><input name="nome" required></div>
+        <div><label>Valor (R$)</label><input name="valor" value="0,00"></div>
+        <div><label>Data</label><input name="data" type="date" value="<?= date('Y-m-d', strtotime('+1 day')) ?>"></div>
+        <div><label>Repetir</label><select name="repete"><option value="nao">Uma vez</option><option value="semanal">Toda semana</option><option value="mensal">Todo mês</option></select></div>
+        <div><label>Mensagem</label><input name="descricao"></div>
+      </div>
+      <div class="acoes"><button type="submit">Agendar Pix</button></div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Cobranças geradas (QR / copia e cola)</h3>
+    <table>
+      <tr><th>Criada</th><th>Valor</th><th>Descrição</th><th>Status</th><th>QR</th><th></th></tr>
+      <?php foreach ($pixCobrancas as $c): ?>
+      <tr>
+        <td><?= date('d/m/Y H:i', strtotime($c['criado_em'])) ?></td>
+        <td><?= $c['valor'] > 0 ? 'R$ ' . m($c['valor']) : '<em>livre</em>' ?></td>
+        <td><?= h($c['descricao']) ?></td>
+        <td><?= h($c['status']) ?></td>
+        <td><?php if ($c['status'] === 'aberta'): ?><a href="qr.php?id=<?= $c['id'] ?>" target="_blank"><img src="qr.php?id=<?= $c['id'] ?>" width="56" height="56" alt="QR"></a><?php endif; ?></td>
+        <td style="white-space:nowrap"><?php if ($c['status'] === 'aberta'): ?>
+          <form method="post" style="display:inline"><input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="cobranca_receber"><input type="hidden" name="id" value="<?= $c['id'] ?>"><input type="hidden" name="nome" value="">
+            <button type="submit" style="padding:7px 12px;font-size:13px">Simular pagamento</button></form>
+          <form method="post" style="display:inline"><input type="hidden" name="form" value="pix"><input type="hidden" name="sub" value="cobranca_cancelar"><input type="hidden" name="id" value="<?= $c['id'] ?>">
+            <button class="sec" type="submit">Cancelar</button></form><?php endif; ?></td>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    <p class="desc" style="margin-top:12px">Para gerar uma cobrança nova, use o app (Receber) ou a aba Simular → “Cobrar”.</p>
+  </div>
+
 <?php elseif ($aba === 'caixinhas'): ?>
   <h2>Caixinhas</h2>
   <p class="desc">Cada caixinha guarda um valor separado do saldo e rende sozinha, todo dia,
@@ -443,6 +567,7 @@ $abas = [
           <select name="acao">
             <option value="pix_enviar">Pix — enviar</option>
             <option value="pix_receber">Pix — receber</option>
+            <option value="pix_copia_cola">Pix — copia e cola (cole o código na Descrição)</option>
             <option value="transferir">Transferência</option>
             <option value="pagar">Pagar boleto</option>
             <option value="depositar">Depositar</option>

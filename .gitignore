@@ -17,3 +17,6 @@ uploads/
 .DS_Store
 npm-debug.*
 yarn-error.log
+
+# Dependências PHP (composer install)
+vendor/

@@ -32,8 +32,8 @@ type Atalho = {
 
 const atalhos: Atalho[] = [
 	{
-		rotulo: "Área Pix", acao: "pix_enviar", titulo: "Pix", subtitulo: "Para quem você quer transferir?",
-		pedeNome: true, icone: <Feather name="codepen" size={24} color={tema.texto} />,
+		rotulo: "Área Pix", tela: "PixPage", acao: "", titulo: "", subtitulo: "",
+		pedeNome: false, icone: <Feather name="codepen" size={24} color={tema.texto} />,
 	},
 	{
 		rotulo: "Pagar", acao: "pagar", titulo: "Pagar", subtitulo: "Boleto, conta ou código de barras",
@@ -48,8 +48,8 @@ const atalhos: Atalho[] = [
 		pedeNome: false, icone: <MaterialCommunityIcons name="bank-transfer-in" size={28} color={tema.texto} />,
 	},
 	{
-		rotulo: "Receber", acao: "pix_receber", titulo: "Receber um Pix", subtitulo: "Simular uma entrada na conta",
-		pedeNome: true, icone: <Feather name="download" size={24} color={tema.texto} />,
+		rotulo: "Receber", tela: "PixReceberPage", acao: "", titulo: "", subtitulo: "",
+		pedeNome: false, icone: <Feather name="download" size={24} color={tema.texto} />,
 	},
 	{
 		rotulo: "Cobrar", acao: "cobrar", titulo: "Cobrar", subtitulo: "Gerar uma cobrança",

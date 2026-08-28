@@ -17,13 +17,13 @@ simuladas de verdade (saldo, fatura e extrato mudam a cada operação).
 |:---:|:---:|
 | <img src="screenshots/conta.png" width="380"> | <img src="screenshots/cartao.png" width="380"> |
 
-| Pix (qualquer operação) | Perfil |
+| Área Pix | Receber com QR Code |
 |:---:|:---:|
-| <img src="screenshots/pix.png" width="380"> | <img src="screenshots/perfil.png" width="380"> |
+| <img src="screenshots/pix.png" width="380"> | <img src="screenshots/pix-receber.png" width="380"> |
 
-| Caixinhas com rendimento | |
+| Caixinhas com rendimento | Perfil |
 |:---:|:---:|
-| <img src="screenshots/caixinhas.png" width="380"> | |
+| <img src="screenshots/caixinhas.png" width="380"> | <img src="screenshots/perfil.png" width="380"> |
 
 </details>
 
@@ -51,6 +51,13 @@ disponível e contratado, cartões, contatos e o extrato inteiro.
 O app abre em **tela cheia** (`display: fullscreen`, respeitando o recorte do topo) e
 atualiza os dados ao **puxar a tela para baixo**.
 
+**Área Pix completa:** transferir por chave ou contato, **Pix copia e cola** (lê o BR Code
+colado, com nome e valor), **receber com QR Code** e copia e cola gerados no padrão EMV do
+Banco Central (com CRC16), cobranças com status, **Pix agendado** (uma vez, semanal ou
+mensal — executa sozinho na data, e falha com motivo se faltar saldo), **minhas chaves**
+(CPF, e-mail, celular e aleatória, até 5, com principal) e **limites** diário e noturno
+(20h–6h) que barram o envio quando estouram.
+
 **Caixinhas com rendimento:** cada caixinha guarda um valor separado do saldo, tem meta,
 ícone e cor próprios e **rende sozinha todo dia** pelo percentual do CDI configurado
 (taxa equivalente diária, creditada de forma idempotente na primeira abertura do dia).
@@ -72,6 +79,7 @@ Banco, usuário e senha `nubank` (em `backend/config.php`).
 | `cartoes` | cartões físicos e virtuais |
 | `contatos` | destinatários rápidos do Pix/transferência |
 | `caixinhas` | caixinhas: meta, saldo, % do CDI e rendimento acumulado |
+| `pix_chaves` / `pix_agendados` / `pix_cobrancas` | chaves, agendamentos e cobranças da área Pix |
 | `transacoes` | extrato — `origem` = `conta`, `credito` ou `caixinha` |
 
 ### Arquivos
@@ -87,6 +95,8 @@ Banco, usuário e senha `nubank` (em `backend/config.php`).
 | `backend/config.php` | credenciais do banco e do usuário master |
 | `backend/db.php` / `backend/auth.php` | conexão PDO e sessão |
 | `backend/dados.php` | leitura do estado e todas as operações simuladas |
+| `backend/pix.php` | chaves, BR Code (gerar/ler), cobranças, agendamentos e limites |
+| `qr.php` | PNG do QR Code de uma cobrança (chillerlan/php-qrcode, com cache) |
 | `backend/schema.sql` / `backend/instalar.php` | schema e instalador |
 | `backend/tools/gerar_icones.py` | gera ícones e splash do PWA |
 | `src/servicos/api.ts` | cliente da API dentro do app |
@@ -98,7 +108,8 @@ Banco, usuário e senha `nubank` (em `backend/config.php`).
 
 ```bash
 cd /www/wwwroot/publishdev.com.br/nubank
-yarn install                            # dependências
+yarn install                            # dependências do app
+composer install                        # gerador de QR Code (vendor/)
 npx expo export:web                     # gera web-build/
 php backend/instalar.php                # tabelas + master + dados iniciais
 python3 backend/tools/gerar_icones.py   # regera os ícones do PWA

@@ -43,14 +43,7 @@ const Content: React.FC = () => {
 				<ArrowButton
 					name="Fazer um Pix"
 					icon="codepen"
-					onPress={() =>
-						navigation.navigate("OperacaoPage", {
-							acao: "pix_enviar",
-							titulo: "Pix",
-							subtitulo: "Para quem você quer transferir?",
-							pedeNome: true,
-						})
-					}
+					onPress={() => navigation.navigate("PixPage")}
 				/>
 
 				<TransactionHistory apenas="conta" />

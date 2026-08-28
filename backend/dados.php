@@ -4,6 +4,7 @@
  * (Pix, transferência, pagamento, depósito, cartão, empréstimo...).
  */
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/pix.php';
 
 function perfil() {
     $p = db()->query('SELECT * FROM perfil WHERE id = 1')->fetch();
@@ -12,7 +13,8 @@ function perfil() {
         $p = db()->query('SELECT * FROM perfil WHERE id = 1')->fetch();
     }
     foreach (['saldo','guardado','rendimento_mes','limite_total','fatura_atual',
-              'limite_liberado','emprestimo_disponivel','emprestimo_contratado'] as $c) {
+              'limite_liberado','emprestimo_disponivel','emprestimo_contratado',
+              'limite_pix_diario','limite_pix_noturno'] as $c) {
         $p[$c] = (float) $p[$c];
     }
     $p['limite_disponivel'] = round($p['limite_total'] - $p['fatura_atual'], 2);
@@ -131,10 +133,19 @@ function transacoes($limite = 300) {
 }
 
 function estado() {
-    $caixinhas = caixinhas();   // roda o rendimento antes de ler o perfil
+    $caixinhas = caixinhas();      // roda o rendimento antes de ler o perfil
+    processar_agendados();          // executa os Pix agendados que venceram
     return [
         'perfil'     => perfil(),
         'caixinhas'  => $caixinhas,
+        'pix'        => [
+            'chaves'        => pix_chaves(),
+            'chave_principal' => pix_chave_principal(),
+            'cobrancas'     => pix_cobrancas(),
+            'agendados'     => pix_agendados(),
+            'enviado_hoje'  => pix_enviado_hoje(),
+            'noturno'       => pix_e_noturno(),
+        ],
         'cartoes'    => cartoes(),
         'contatos'   => contatos(),
         'transacoes' => transacoes(),
@@ -170,6 +181,63 @@ function ajustar_perfil($campos) {
     db()->prepare('UPDATE perfil SET ' . implode(', ', $sets) . ' WHERE id = ?')->execute($vals);
 }
 
+/** Barra o Pix que estoura o limite diário (ou o noturno, entre 20h e 6h). */
+function conferir_limite_pix($valor) {
+    $p     = perfil();
+    $hoje  = pix_enviado_hoje();
+    $noite = pix_e_noturno();
+    $limite = $noite ? (float) $p['limite_pix_noturno'] : (float) $p['limite_pix_diario'];
+
+    if ($noite && $valor > $limite) {
+        throw new OperacaoInvalida('Entre 20h e 6h o limite por Pix é de R$ '
+            . number_format($limite, 2, ',', '.') . '. Ajuste em Limites, na área Pix.');
+    }
+    if (!$noite && $hoje + $valor > $limite) {
+        throw new OperacaoInvalida('Isso passa do seu limite diário de Pix (R$ '
+            . number_format($limite, 2, ',', '.') . '). Hoje você já enviou R$ '
+            . number_format($hoje, 2, ',', '.') . '.');
+    }
+}
+
+/**
+ * Executa os Pix agendados cujo dia chegou. Roda junto do carregamento do estado
+ * e é seguro repetir: só pega os que ainda estão com status "agendado".
+ */
+function processar_agendados() {
+    $vencidos = db()->query("SELECT * FROM pix_agendados
+        WHERE status = 'agendado' AND data_agendada <= CURDATE() ORDER BY data_agendada")->fetchAll();
+    if (!$vencidos) { return; }
+
+    foreach ($vencidos as $a) {
+        $valor = (float) $a['valor'];
+        $p     = perfil();
+        if ($valor > $p['saldo']) {
+            db()->prepare("UPDATE pix_agendados SET status = 'falhou', motivo_falha = ? WHERE id = ?")
+                ->execute(['Saldo insuficiente na data agendada.', $a['id']]);
+            continue;
+        }
+
+        ajustar_perfil(['saldo' => $p['saldo'] - $valor]);
+        registrar('pix_agendado', 'Transferência enviada', $valor, 'saida', [
+            'contraparte' => $a['nome'],
+            'descricao'   => trim('Pix agendado ' . ($a['descricao'] ? '· ' . $a['descricao'] : '')),
+            'icone'       => 'clock',
+        ]);
+        db()->prepare("UPDATE pix_agendados SET status = 'executado', executado_em = NOW() WHERE id = ?")
+            ->execute([$a['id']]);
+
+        // Recorrência: já deixa o próximo agendado.
+        if ($a['repete'] !== 'nao') {
+            $prox = new DateTime($a['data_agendada']);
+            $prox->modify($a['repete'] === 'mensal' ? '+1 month' : '+1 week');
+            db()->prepare('INSERT INTO pix_agendados (nome, chave, valor, descricao, data_agendada, repete)
+                           VALUES (?, ?, ?, ?, ?, ?)')
+                ->execute([$a['nome'], $a['chave'], $valor, $a['descricao'],
+                           $prox->format('Y-m-d'), $a['repete']]);
+        }
+    }
+}
+
 /** Falha de operação com mensagem amigável. */
 class OperacaoInvalida extends Exception {}
 
@@ -198,17 +266,29 @@ function credita_conta($valor) {
  * Executa uma operação simulada. Retorna a mensagem de sucesso.
  */
 function operar($acao, $in) {
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $msg = operar_interno($acao, $in);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+    return $msg;
+}
+
+/** O switch das operações, sem controle de transação (operar() cuida disso). */
+function operar_interno($acao, $in) {
     $valor  = isset($in['valor']) ? $in['valor'] : 0;
     $nome   = trim(isset($in['nome']) ? $in['nome'] : '');
     $desc   = trim(isset($in['descricao']) ? $in['descricao'] : '');
-    $pdo    = db();
-
-    $pdo->beginTransaction();
-    try {
+    {
         switch ($acao) {
             case 'pix_enviar':
                 $valor = exige_valor($valor);
                 if ($nome === '') { throw new OperacaoInvalida('Informe o destinatário.'); }
+                conferir_limite_pix($valor);
                 debita_conta($valor);
                 registrar('pix_enviado', 'Transferência enviada', $valor, 'saida',
                     ['contraparte' => $nome, 'descricao' => $desc ?: 'Pix', 'icone' => 'arrow-up-right']);
@@ -257,10 +337,8 @@ function operar($acao, $in) {
                 break;
 
             case 'cobrar':
-                $valor = exige_valor($valor);
-                registrar('cobranca', 'Cobrança criada', $valor, 'entrada',
-                    ['contraparte' => $nome ?: 'Cobrança', 'descricao' => 'Aguardando pagamento', 'icone' => 'inbox']);
-                $msg = 'Cobrança de R$ ' . number_format($valor, 2, ',', '.') . ' gerada.';
+                // Mesmo que "pix_cobranca_criar": gera QR e copia e cola na chave principal.
+                $msg = operar_interno('pix_cobranca_criar', $in);
                 break;
 
             case 'guardar':
@@ -321,6 +399,123 @@ function operar($acao, $in) {
                      . ((float) $c['saldo'] > 0 ? ' e R$ ' . number_format($c['saldo'], 2, ',', '.') . ' devolvidos para a conta.' : '.');
                 break;
 
+            case 'pix_copia_cola':
+                $lido = pix_ler_br_code(isset($in['codigo']) ? $in['codigo'] : '');
+                if (!$lido) { throw new OperacaoInvalida('Código Pix inválido. Confira e cole de novo.'); }
+                $valor = exige_valor($valor > 0 ? $valor : $lido['valor']);
+                $destino = $nome !== '' ? $nome : ($lido['nome'] !== '' ? $lido['nome'] : $lido['chave']);
+                conferir_limite_pix($valor);
+                debita_conta($valor);
+                registrar('pix_enviado', 'Transferência enviada', $valor, 'saida', [
+                    'contraparte' => $destino,
+                    'descricao'   => trim('Pix copia e cola ' . ($lido['descricao'] ? '· ' . $lido['descricao'] : '')),
+                    'icone'       => 'arrow-up-right',
+                ]);
+                $msg = 'Pix de R$ ' . number_format($valor, 2, ',', '.') . ' enviado para ' . $destino . '.';
+                break;
+
+            case 'pix_chave_criar':
+                $tipo  = isset($in['tipo']) ? $in['tipo'] : '';
+                $chave = trim(isset($in['chave']) ? $in['chave'] : '');
+                if ($tipo === 'aleatoria' || ($chave === '' && $tipo === '')) {
+                    $chave = pix_chave_aleatoria();
+                    $tipo  = 'aleatoria';
+                }
+                if ($chave === '') { throw new OperacaoInvalida('Informe a chave que você quer cadastrar.'); }
+                if ($tipo === '') { $tipo = pix_detectar_tipo($chave); }
+                $existe = db()->prepare('SELECT id FROM pix_chaves WHERE valor = ?');
+                $existe->execute([$chave]);
+                if ($existe->fetch()) { throw new OperacaoInvalida('Essa chave já está cadastrada.'); }
+                $primeira = !db()->query('SELECT id FROM pix_chaves LIMIT 1')->fetch();
+                db()->prepare('INSERT INTO pix_chaves (tipo, valor, principal) VALUES (?, ?, ?)')
+                    ->execute([$tipo, $chave, $primeira ? 1 : 0]);
+                $msg = pix_tipo_rotulo($tipo) . ' cadastrado como chave Pix.';
+                break;
+
+            case 'pix_chave_excluir':
+                $st = db()->prepare('SELECT * FROM pix_chaves WHERE id = ?');
+                $st->execute([(int) (isset($in['chave_id']) ? $in['chave_id'] : 0)]);
+                $ch = $st->fetch();
+                if (!$ch) { throw new OperacaoInvalida('Chave não encontrada.'); }
+                db()->prepare('DELETE FROM pix_chaves WHERE id = ?')->execute([$ch['id']]);
+                if ($ch['principal']) {
+                    db()->exec('UPDATE pix_chaves SET principal = 1 ORDER BY id LIMIT 1');
+                }
+                $msg = 'Chave ' . $ch['valor'] . ' excluída.';
+                break;
+
+            case 'pix_chave_principal':
+                $id = (int) (isset($in['chave_id']) ? $in['chave_id'] : 0);
+                db()->exec('UPDATE pix_chaves SET principal = 0');
+                db()->prepare('UPDATE pix_chaves SET principal = 1 WHERE id = ?')->execute([$id]);
+                $msg = 'Chave principal atualizada.';
+                break;
+
+            case 'pix_cobranca_criar':
+                $p      = perfil();
+                $chave  = pix_chave_principal();
+                $codigo = pix_br_code($chave, round((float) $valor, 2), $p['nome'], 'MACEIO', $desc);
+                db()->prepare('INSERT INTO pix_cobrancas (valor, descricao, chave, codigo) VALUES (?, ?, ?, ?)')
+                    ->execute([round((float) $valor, 2), $desc, $chave, $codigo]);
+                $msg = $valor > 0
+                    ? 'Cobrança de R$ ' . number_format($valor, 2, ',', '.') . ' gerada.'
+                    : 'Código Pix gerado (sem valor definido).';
+                break;
+
+            case 'pix_cobranca_receber':
+                $st = db()->prepare("SELECT * FROM pix_cobrancas WHERE id = ? AND status = 'aberta'");
+                $st->execute([(int) (isset($in['cobranca_id']) ? $in['cobranca_id'] : 0)]);
+                $cob = $st->fetch();
+                if (!$cob) { throw new OperacaoInvalida('Cobrança não encontrada ou já paga.'); }
+                $valor = exige_valor($valor > 0 ? $valor : (float) $cob['valor']);
+                credita_conta($valor);
+                registrar('pix_recebido', 'Transferência recebida', $valor, 'entrada', [
+                    'contraparte' => $nome !== '' ? $nome : 'Cobrança Pix',
+                    'descricao'   => $cob['descricao'] ?: 'Pix',
+                    'icone'       => 'arrow-down-left',
+                ]);
+                db()->prepare("UPDATE pix_cobrancas SET status = 'paga', pago_em = NOW() WHERE id = ?")
+                    ->execute([$cob['id']]);
+                $msg = 'Cobrança paga: R$ ' . number_format($valor, 2, ',', '.') . ' na sua conta.';
+                break;
+
+            case 'pix_cobranca_cancelar':
+                db()->prepare("UPDATE pix_cobrancas SET status = 'cancelada' WHERE id = ? AND status = 'aberta'")
+                    ->execute([(int) (isset($in['cobranca_id']) ? $in['cobranca_id'] : 0)]);
+                $msg = 'Cobrança cancelada.';
+                break;
+
+            case 'pix_agendar':
+                $valor = exige_valor($valor);
+                if ($nome === '') { throw new OperacaoInvalida('Informe o destinatário.'); }
+                $data = isset($in['data']) ? trim($in['data']) : '';
+                if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
+                    throw new OperacaoInvalida('Escolha a data do agendamento.');
+                }
+                if ($data < date('Y-m-d')) { throw new OperacaoInvalida('A data não pode estar no passado.'); }
+                $repete = isset($in['repete']) && in_array($in['repete'], ['mensal', 'semanal'], true) ? $in['repete'] : 'nao';
+                db()->prepare('INSERT INTO pix_agendados (nome, chave, valor, descricao, data_agendada, repete)
+                               VALUES (?, ?, ?, ?, ?, ?)')
+                    ->execute([$nome, isset($in['chave']) ? $in['chave'] : null, $valor, $desc, $data, $repete]);
+                $msg = 'Pix de R$ ' . number_format($valor, 2, ',', '.') . ' agendado para '
+                     . date('d/m/Y', strtotime($data)) . '.';
+                break;
+
+            case 'pix_agendado_cancelar':
+                db()->prepare("UPDATE pix_agendados SET status = 'cancelado' WHERE id = ? AND status IN ('agendado','falhou')")
+                    ->execute([(int) (isset($in['agendado_id']) ? $in['agendado_id'] : 0)]);
+                $msg = 'Agendamento cancelado.';
+                break;
+
+            case 'pix_limites':
+                $diario  = round((float) (isset($in['limite_diario']) ? $in['limite_diario'] : 0), 2);
+                $noturno = round((float) (isset($in['limite_noturno']) ? $in['limite_noturno'] : 0), 2);
+                if ($diario <= 0 || $noturno <= 0) { throw new OperacaoInvalida('Os limites precisam ser maiores que zero.'); }
+                if ($noturno > $diario) { throw new OperacaoInvalida('O limite noturno não pode passar do diário.'); }
+                ajustar_perfil(['limite_pix_diario' => $diario, 'limite_pix_noturno' => $noturno]);
+                $msg = 'Limites do Pix atualizados.';
+                break;
+
             case 'compra_credito':
                 $valor = exige_valor($valor);
                 $p = perfil();
@@ -370,10 +565,6 @@ function operar($acao, $in) {
             default:
                 throw new OperacaoInvalida('Operação desconhecida: ' . $acao);
         }
-        $pdo->commit();
-    } catch (Throwable $e) {
-        $pdo->rollBack();
-        throw $e;
     }
     return $msg;
 }

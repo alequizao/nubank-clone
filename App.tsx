@@ -8,6 +8,13 @@ import Operacao from "./src/pages/Operacao";
 import Cartao from "./src/pages/Cartao";
 import Perfil from "./src/pages/Perfil";
 import Caixinhas from "./src/pages/Caixinhas";
+import Pix from "./src/pages/Pix";
+import PixTransferir from "./src/pages/Pix/Transferir";
+import PixCopiaCola from "./src/pages/Pix/CopiaCola";
+import PixReceber from "./src/pages/Pix/Receber";
+import PixAgendar from "./src/pages/Pix/Agendar";
+import PixChaves from "./src/pages/Pix/Chaves";
+import PixLimites from "./src/pages/Pix/Limites";
 import { AppProvider } from "./src/estado/AppContexto";
 
 export type StackParamList = {
@@ -16,6 +23,13 @@ export type StackParamList = {
 	AdjustLimitPage: undefined;
 	CartaoPage: undefined;
 	CaixinhasPage: undefined;
+	PixPage: undefined;
+	PixTransferirPage: { contato?: string } | undefined;
+	PixCopiaColaPage: undefined;
+	PixReceberPage: undefined;
+	PixAgendarPage: undefined;
+	PixChavesPage: undefined;
+	PixLimitesPage: undefined;
 	PerfilPage: undefined;
 	OperacaoPage: {
 		acao: string;
@@ -31,7 +45,10 @@ const TELAS: Record<string, string> = {
 	limite: "AdjustLimitPage",
 	cartao: "CartaoPage",
 	perfil: "PerfilPage",
-	pix: "OperacaoPage",
+	pix: "PixPage",
+	receber: "PixReceberPage",
+	agendar: "PixAgendarPage",
+	chaves: "PixChavesPage",
 	caixinhas: "CaixinhasPage",
 };
 
@@ -63,6 +80,13 @@ export default function App() {
 					<Stack.Screen name="CartaoPage" component={Cartao} />
 					<Stack.Screen name="PerfilPage" component={Perfil} />
 					<Stack.Screen name="CaixinhasPage" component={Caixinhas} />
+					<Stack.Screen name="PixPage" component={Pix} />
+					<Stack.Screen name="PixTransferirPage" component={PixTransferir} />
+					<Stack.Screen name="PixCopiaColaPage" component={PixCopiaCola} />
+					<Stack.Screen name="PixReceberPage" component={PixReceber} />
+					<Stack.Screen name="PixAgendarPage" component={PixAgendar} />
+					<Stack.Screen name="PixChavesPage" component={PixChaves} />
+					<Stack.Screen name="PixLimitesPage" component={PixLimites} />
 				</Stack.Navigator>
 			</NavigationContainer>
 		</AppProvider>

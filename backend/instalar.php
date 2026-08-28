@@ -60,6 +60,18 @@ if (!db()->query('SELECT id FROM caixinhas LIMIT 1')->fetch()) {
     echo "Caixinhas iniciais criadas.\n";
 }
 
+// ── Chaves Pix iniciais ───────────────────────────────────────────────────
+if (!db()->query('SELECT id FROM pix_chaves LIMIT 1')->fetch()) {
+    $p   = perfil();
+    $ins = db()->prepare('INSERT INTO pix_chaves (tipo, valor, principal) VALUES (?, ?, ?)');
+    if (!empty($p['chave_pix'])) {
+        $ins->execute([pix_detectar_tipo($p['chave_pix']), $p['chave_pix'], 1]);
+    }
+    $ins->execute(['telefone', '(82) 98871-7072', 0]);
+    $ins->execute(['aleatoria', pix_chave_aleatoria(), 0]);
+    echo "Chaves Pix iniciais criadas.\n";
+}
+
 // ── Contatos para as simulações de Pix ────────────────────────────────────
 if (!db()->query('SELECT id FROM contatos LIMIT 1')->fetch()) {
     $ins = db()->prepare('INSERT INTO contatos (nome, chave, banco) VALUES (?, ?, ?)');

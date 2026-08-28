@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS perfil (
   limite_liberado       DECIMAL(14,2) NOT NULL DEFAULT 0.00,
   emprestimo_disponivel DECIMAL(14,2) NOT NULL DEFAULT 0.00,
   emprestimo_contratado DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  limite_pix_diario     DECIMAL(14,2) NOT NULL DEFAULT 10000.00,
+  limite_pix_noturno    DECIMAL(14,2) NOT NULL DEFAULT 1000.00,
   cor_tema              VARCHAR(9)    NOT NULL DEFAULT '#820AD1',
   atualizado_em         DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
@@ -103,5 +105,46 @@ CREATE TABLE IF NOT EXISTS caixinhas (
   ultimo_rendimento     DATE          DEFAULT NULL,
   ordem                 INT           NOT NULL DEFAULT 0,
   criado_em             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Chaves Pix cadastradas pelo titular.
+CREATE TABLE IF NOT EXISTS pix_chaves (
+  id        INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  tipo      ENUM('cpf','cnpj','email','telefone','aleatoria') NOT NULL DEFAULT 'email',
+  valor     VARCHAR(140) NOT NULL,
+  principal TINYINT(1)   NOT NULL DEFAULT 0,
+  criado_em DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_pix_chaves_valor (valor)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Pix agendados: executam sozinhos quando a data chega.
+CREATE TABLE IF NOT EXISTS pix_agendados (
+  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nome           VARCHAR(140)  NOT NULL,
+  chave          VARCHAR(140)  DEFAULT NULL,
+  valor          DECIMAL(14,2) NOT NULL,
+  descricao      VARCHAR(255)  DEFAULT NULL,
+  data_agendada  DATE          NOT NULL,
+  repete         ENUM('nao','mensal','semanal') NOT NULL DEFAULT 'nao',
+  status         ENUM('agendado','executado','cancelado','falhou') NOT NULL DEFAULT 'agendado',
+  motivo_falha   VARCHAR(255)  DEFAULT NULL,
+  executado_em   DATETIME      DEFAULT NULL,
+  criado_em      DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_pix_agendados_data (data_agendada, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Cobranças Pix geradas (QR / copia e cola).
+CREATE TABLE IF NOT EXISTS pix_cobrancas (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  valor       DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  descricao   VARCHAR(140)  DEFAULT NULL,
+  chave       VARCHAR(140)  NOT NULL,
+  codigo      TEXT          NOT NULL,
+  status      ENUM('aberta','paga','cancelada') NOT NULL DEFAULT 'aberta',
+  pago_em     DATETIME      DEFAULT NULL,
+  criado_em   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

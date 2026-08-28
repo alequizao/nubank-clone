@@ -1,6 +1,8 @@
 /** Conversa com o backend PHP (api.php), sempre na mesma origem/sessão. */
 
 export interface Perfil {
+	limite_pix_diario: number;
+	limite_pix_noturno: number;
 	nome: string;
 	foto: string | null;
 	cpf: string | null;
@@ -30,6 +32,44 @@ export interface Caixinha {
 	percentual_cdi: number;
 	rende: boolean;
 	progresso: number | null;
+}
+
+export interface PixChave {
+	id: number;
+	tipo: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria";
+	valor: string;
+	principal: boolean;
+}
+
+export interface PixCobranca {
+	id: number;
+	valor: number;
+	descricao: string | null;
+	chave: string;
+	codigo: string;
+	status: "aberta" | "paga" | "cancelada";
+	criado_em: string;
+}
+
+export interface PixAgendado {
+	id: number;
+	nome: string;
+	chave: string | null;
+	valor: number;
+	descricao: string | null;
+	data_agendada: string;
+	repete: "nao" | "mensal" | "semanal";
+	status: "agendado" | "executado" | "cancelado" | "falhou";
+	motivo_falha: string | null;
+}
+
+export interface Pix {
+	chaves: PixChave[];
+	chave_principal: string;
+	cobrancas: PixCobranca[];
+	agendados: PixAgendado[];
+	enviado_hoje: number;
+	noturno: boolean;
 }
 
 export interface Cartao {
@@ -64,6 +104,7 @@ export interface Transacao {
 
 export interface Estado {
 	perfil: Perfil;
+	pix: Pix;
 	caixinhas: Caixinha[];
 	cartoes: Cartao[];
 	contatos: Contato[];
@@ -99,6 +140,16 @@ export interface DadosOperacao {
 	percentual_cdi?: number;
 	icone?: string;
 	cor?: string;
+	codigo?: string;
+	chave?: string;
+	chave_id?: number;
+	tipo?: string;
+	cobranca_id?: number;
+	agendado_id?: number;
+	data?: string;
+	repete?: string;
+	limite_diario?: number;
+	limite_noturno?: number;
 }
 
 export async function executarOperacao(
