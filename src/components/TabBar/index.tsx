@@ -27,7 +27,9 @@ const styles = StyleSheet.create({
 		right: 0,
 		bottom: 0,
 		alignItems: "center",
-		paddingBottom: Platform.OS === "ios" ? 26 : 16,
+		// O recorte inferior do aparelho já é tratado pelo CSS do index.php;
+		// aqui fica só o respiro da barra flutuante.
+		paddingBottom: Platform.OS === "ios" ? 22 : 18,
 		backgroundColor: "transparent",
 	},
 	content: {

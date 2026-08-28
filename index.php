@@ -29,10 +29,15 @@ $pwa = '<link rel="manifest" href="manifest.php">'
      // Tela cheia: ocupa a altura toda, respeita o recorte do topo (notch) e
      // pinta essa faixa de roxo para o header do app encostar na borda.
      . '<style>'
-     . 'html,body{height:100%;min-height:100dvh;overscroll-behavior:none;background:#820AD1}'
-     . 'body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}'
+     // O app ocupa exatamente a área visível, já descontando o recorte do topo e a
+     // barra de gestos do iPhone — senão o #root fica mais alto que a tela e a barra
+     // de navegação (posicionada no rodapé) some por baixo do indicador de home.
+     . 'html{height:100%;background:#820AD1}'
+     . 'body{box-sizing:border-box;height:100dvh;min-height:100dvh;margin:0;overflow:hidden;'
+     .   'overscroll-behavior:none;background:#820AD1;'
+     .   'padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}'
      . 'body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:#820AD1;z-index:9999}'
-     . '#root{min-height:100dvh;background:#fff}'
+     . '#root{height:100%;min-height:0;flex:1;display:flex;background:#fff;overflow:hidden}'
      . '</style>';
 $conteudo = str_replace('</head>', $pwa . '</head>', $conteudo);
 
