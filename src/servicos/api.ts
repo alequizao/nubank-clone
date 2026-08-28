@@ -19,6 +19,19 @@ export interface Perfil {
 	cor_tema: string;
 }
 
+export interface Caixinha {
+	id: number;
+	nome: string;
+	icone: string;
+	cor: string;
+	objetivo: number;
+	saldo: number;
+	rendimento_acumulado: number;
+	percentual_cdi: number;
+	rende: boolean;
+	progresso: number | null;
+}
+
 export interface Cartao {
 	id: number;
 	apelido: string;
@@ -51,6 +64,7 @@ export interface Transacao {
 
 export interface Estado {
 	perfil: Perfil;
+	caixinhas: Caixinha[];
 	cartoes: Cartao[];
 	contatos: Contato[];
 	transacoes: Transacao[];
@@ -80,6 +94,11 @@ export interface DadosOperacao {
 	valor?: number;
 	nome?: string;
 	descricao?: string;
+	caixinha_id?: number;
+	objetivo?: number;
+	percentual_cdi?: number;
+	icone?: string;
+	cor?: string;
 }
 
 export async function executarOperacao(

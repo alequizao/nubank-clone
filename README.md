@@ -21,6 +21,10 @@ simuladas de verdade (saldo, fatura e extrato mudam a cada operação).
 |:---:|:---:|
 | <img src="screenshots/pix.png" width="380"> | <img src="screenshots/perfil.png" width="380"> |
 
+| Caixinhas com rendimento | |
+|:---:|:---:|
+| <img src="screenshots/caixinhas.png" width="380"> | |
+
 </details>
 
 ## 🚀 Instalação nesta hospedagem
@@ -47,6 +51,11 @@ disponível e contratado, cartões, contatos e o extrato inteiro.
 O app abre em **tela cheia** (`display: fullscreen`, respeitando o recorte do topo) e
 atualiza os dados ao **puxar a tela para baixo**.
 
+**Caixinhas com rendimento:** cada caixinha guarda um valor separado do saldo, tem meta,
+ícone e cor próprios e **rende sozinha todo dia** pelo percentual do CDI configurado
+(taxa equivalente diária, creditada de forma idempotente na primeira abertura do dia).
+O "dinheiro guardado" do perfil é sempre a soma das caixinhas.
+
 **Operações simuladas** (mudam saldo, fatura e extrato de verdade, tanto no app quanto no painel):
 Pix enviar/receber, transferir, pagar boleto, depositar, recarga, cobrar, guardar e resgatar
 na caixinha, compra no crédito, pagar fatura, ajustar limite e contratar empréstimo.
@@ -62,7 +71,8 @@ Banco, usuário e senha `nubank` (em `backend/config.php`).
 | `perfil` | titular, saldos, limites e empréstimo — o que o app exibe |
 | `cartoes` | cartões físicos e virtuais |
 | `contatos` | destinatários rápidos do Pix/transferência |
-| `transacoes` | extrato (conta e cartão de crédito) |
+| `caixinhas` | caixinhas: meta, saldo, % do CDI e rendimento acumulado |
+| `transacoes` | extrato — `origem` = `conta`, `credito` ou `caixinha` |
 
 ### Arquivos
 

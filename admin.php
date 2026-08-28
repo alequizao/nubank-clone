@@ -61,6 +61,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ok = 'Cartão criado.';
             }
             $aba = 'cartoes';
+        } elseif ($form === 'caixinha') {
+            if (!empty($_POST['excluir'])) {
+                $ok = operar('caixinha_excluir', ['caixinha_id' => (int) $_POST['excluir']]);
+            } elseif (!empty($_POST['id'])) {
+                db()->prepare('UPDATE caixinhas SET nome=?, icone=?, cor=?, objetivo=?, saldo=?, percentual_cdi=?, rende=?, ordem=? WHERE id=?')
+                    ->execute([$_POST['nome'], $_POST['icone'], $_POST['cor'], n($_POST['objetivo']),
+                               n($_POST['saldo']), (float) str_replace(',', '.', $_POST['percentual_cdi']),
+                               isset($_POST['rende']) ? 1 : 0, (int) $_POST['ordem'], (int) $_POST['id']]);
+                sincronizar_guardado();
+                $ok = 'Caixinha atualizada.';
+            } else {
+                $ok = operar('caixinha_criar', [
+                    'nome'           => $_POST['nome'],
+                    'objetivo'       => n($_POST['objetivo']),
+                    'percentual_cdi' => (float) str_replace(',', '.', $_POST['percentual_cdi']),
+                    'icone'          => $_POST['icone'],
+                    'cor'            => $_POST['cor'],
+                ]);
+            }
+            $aba = 'caixinhas';
         } elseif ($form === 'contato') {
             if (!empty($_POST['excluir'])) {
                 db()->prepare('DELETE FROM contatos WHERE id = ?')->execute([(int) $_POST['excluir']]);
@@ -88,7 +108,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $aba = 'extrato';
         } elseif ($form === 'simular') {
-            $ok  = operar($_POST['acao'], ['valor' => n($_POST['valor']), 'nome' => $_POST['nome'], 'descricao' => $_POST['descricao']]);
+            $ok  = operar($_POST['acao'], [
+                'valor'       => n($_POST['valor']),
+                'nome'        => $_POST['nome'],
+                'descricao'   => $_POST['descricao'],
+                'caixinha_id' => isset($_POST['caixinha_id']) ? (int) $_POST['caixinha_id'] : 0,
+            ]);
             $aba = 'simular';
         } elseif ($form === 'senha') {
             if (strlen($_POST['nova']) < 4) { throw new Exception('A senha precisa ter ao menos 4 caracteres.'); }
@@ -103,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $p          = perfil();
+$listaCaixinhas = caixinhas();
 $cartoes    = cartoes();
 $contatos   = contatos();
 $transacoes = transacoes(200);
@@ -112,6 +138,7 @@ function m($v) { return number_format((float) $v, 2, ',', '.'); }
 
 $abas = [
     'perfil'   => 'Perfil e saldos',
+    'caixinhas' => 'Caixinhas',
     'cartoes'  => 'Cartões',
     'contatos' => 'Contatos',
     'extrato'  => 'Extrato',
@@ -125,6 +152,11 @@ $abas = [
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Painel · Nubank</title>
+<link rel="icon" type="image/png" sizes="192x192" href="pwa-icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="pwa-icons/icon-96.png">
+<link rel="apple-touch-icon" href="pwa-icons/icon-180.png">
+<link rel="manifest" href="manifest.php">
+<meta name="theme-color" content="#820AD1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -278,6 +310,56 @@ $abas = [
     </form>
   </div>
 
+<?php elseif ($aba === 'caixinhas'): ?>
+  <h2>Caixinhas</h2>
+  <p class="desc">Cada caixinha guarda um valor separado do saldo e rende sozinha, todo dia,
+  pelo percentual do CDI. O “guardado” do perfil é sempre a soma delas.</p>
+  <div class="card">
+    <h3>Caixinhas cadastradas</h3>
+    <table>
+      <tr><th>Nome</th><th>Ícone</th><th>Cor</th><th>Meta</th><th>Saldo</th><th>% CDI</th><th>Rendeu</th><th>Rende?</th><th></th></tr>
+      <?php foreach ($listaCaixinhas as $c): ?>
+      <tr>
+        <form method="post">
+          <input type="hidden" name="form" value="caixinha"><input type="hidden" name="id" value="<?= $c['id'] ?>">
+          <input type="hidden" name="ordem" value="<?= $c['ordem'] ?>">
+          <td><input name="nome" value="<?= h($c['nome']) ?>"></td>
+          <td><input name="icone" value="<?= h($c['icone']) ?>" size="8"></td>
+          <td><input name="cor" type="color" value="<?= h($c['cor']) ?>" style="height:40px;padding:3px;width:56px"></td>
+          <td><input name="objetivo" value="<?= m($c['objetivo']) ?>" size="10"></td>
+          <td><input name="saldo" value="<?= m($c['saldo']) ?>" size="10"></td>
+          <td><input name="percentual_cdi" value="<?= m($c['percentual_cdi']) ?>" size="6"></td>
+          <td><?= m($c['rendimento_acumulado']) ?></td>
+          <td><input type="checkbox" name="rende" style="width:auto" <?= $c['rende'] ? 'checked' : '' ?>></td>
+          <td style="white-space:nowrap"><button type="submit">Salvar</button></td>
+        </form>
+        <form method="post" onsubmit="return confirm('Encerrar a caixinha? O saldo volta para a conta.')">
+          <input type="hidden" name="form" value="caixinha"><input type="hidden" name="excluir" value="<?= $c['id'] ?>">
+          <td><button class="sec" type="submit">Encerrar</button></td>
+        </form>
+      </tr>
+      <?php endforeach; ?>
+    </table>
+    <p class="desc" style="margin-top:14px">
+      Total guardado: <strong>R$ <?= m($p['guardado']) ?></strong> ·
+      rendimento acumulado: <strong>R$ <?= m(array_sum(array_column($listaCaixinhas, 'rendimento_acumulado'))) ?></strong>
+    </p>
+  </div>
+  <div class="card">
+    <h3>Nova caixinha</h3>
+    <form method="post">
+      <input type="hidden" name="form" value="caixinha">
+      <div class="grade">
+        <div><label>Nome</label><input name="nome" required placeholder="Reforma da casa"></div>
+        <div><label>Meta (R$)</label><input name="objetivo" value="0,00"></div>
+        <div><label>Percentual do CDI</label><input name="percentual_cdi" value="100,00"></div>
+        <div><label>Ícone (Feather)</label><input name="icone" value="box"></div>
+        <div><label>Cor</label><input name="cor" type="color" value="#820AD1" style="height:42px;padding:4px"></div>
+      </div>
+      <div class="acoes"><button type="submit">Criar caixinha</button></div>
+    </form>
+  </div>
+
 <?php elseif ($aba === 'contatos'): ?>
   <h2>Contatos</h2>
   <p class="desc">Usados como destinatários rápidos no Pix e nas transferências.</p>
@@ -366,7 +448,7 @@ $abas = [
             <option value="depositar">Depositar</option>
             <option value="recarga">Recarga de celular</option>
             <option value="cobrar">Cobrar</option>
-            <option value="guardar">Guardar dinheiro</option>
+            <option value="guardar">Guardar dinheiro na caixinha</option>
             <option value="resgatar">Resgatar da caixinha</option>
             <option value="compra_credito">Compra no crédito</option>
             <option value="pagar_fatura">Pagar fatura</option>
@@ -376,6 +458,12 @@ $abas = [
         <div><label>Valor (R$)</label><input name="valor" value="0,00"></div>
         <div><label>Nome / destinatário</label><input name="nome"></div>
         <div><label>Descrição</label><input name="descricao"></div>
+        <div><label>Caixinha (para guardar/resgatar)</label>
+          <select name="caixinha_id">
+            <?php foreach ($listaCaixinhas as $c): ?>
+              <option value="<?= $c['id'] ?>"><?= h($c['nome']) ?> — R$ <?= m($c['saldo']) ?></option>
+            <?php endforeach; ?>
+          </select></div>
       </div>
       <div class="acoes"><button type="submit">Executar</button></div>
     </form>

@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Linking, Platform } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import NavigationHeader from "../../components/NavigationHeader";
 import { useApp } from "../../estado/AppContexto";
 import { reais } from "../../servicos/formato";
@@ -33,6 +34,7 @@ function abrir(caminho: string) {
 }
 
 const Perfil: React.FC = () => {
+	const navigation = useNavigation<any>();
 	const { estado } = useApp();
 	const p = estado?.perfil;
 
@@ -56,10 +58,10 @@ const Perfil: React.FC = () => {
 						<Text style={styles.blocoRotulo}>Saldo disponível</Text>
 						<Text style={styles.blocoValor}>{reais(p?.saldo ?? 0)}</Text>
 					</View>
-					<View style={styles.bloco}>
-						<Text style={styles.blocoRotulo}>Dinheiro guardado</Text>
+					<TouchableOpacity style={styles.bloco} onPress={() => navigation.navigate("CaixinhasPage")}>
+						<Text style={styles.blocoRotulo}>Dinheiro guardado nas caixinhas</Text>
 						<Text style={styles.blocoValor}>{reais(p?.guardado ?? 0)}</Text>
-					</View>
+					</TouchableOpacity>
 					<View style={styles.bloco}>
 						<Text style={styles.blocoRotulo}>Rendimento do mês</Text>
 						<Text style={styles.blocoValor}>{reais(p?.rendimento_mes ?? 0)}</Text>

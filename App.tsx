@@ -7,6 +7,7 @@ import AdjustLimit from "./src/pages/AdjustLimit";
 import Operacao from "./src/pages/Operacao";
 import Cartao from "./src/pages/Cartao";
 import Perfil from "./src/pages/Perfil";
+import Caixinhas from "./src/pages/Caixinhas";
 import { AppProvider } from "./src/estado/AppContexto";
 
 export type StackParamList = {
@@ -14,6 +15,7 @@ export type StackParamList = {
 	BalancePage: undefined;
 	AdjustLimitPage: undefined;
 	CartaoPage: undefined;
+	CaixinhasPage: undefined;
 	PerfilPage: undefined;
 	OperacaoPage: {
 		acao: string;
@@ -30,6 +32,7 @@ const TELAS: Record<string, string> = {
 	cartao: "CartaoPage",
 	perfil: "PerfilPage",
 	pix: "OperacaoPage",
+	caixinhas: "CaixinhasPage",
 };
 
 function telaInicial(): string {
@@ -59,6 +62,7 @@ export default function App() {
 					/>
 					<Stack.Screen name="CartaoPage" component={Cartao} />
 					<Stack.Screen name="PerfilPage" component={Perfil} />
+					<Stack.Screen name="CaixinhasPage" component={Caixinhas} />
 				</Stack.Navigator>
 			</NavigationContainer>
 		</AppProvider>

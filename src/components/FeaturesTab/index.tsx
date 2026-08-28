@@ -21,6 +21,8 @@ const styles = StyleSheet.create({
 
 type Atalho = {
 	rotulo: string;
+	/** Quando presente, o atalho abre uma tela própria em vez da tela de operação. */
+	tela?: string;
 	acao: string;
 	titulo: string;
 	subtitulo: string;
@@ -58,12 +60,8 @@ const atalhos: Atalho[] = [
 		pedeNome: true, icone: <Feather name="smartphone" size={24} color={tema.texto} />,
 	},
 	{
-		rotulo: "Caixinhas", acao: "guardar", titulo: "Guardar dinheiro", subtitulo: "Separar um valor do saldo",
+		rotulo: "Caixinhas", tela: "CaixinhasPage", acao: "", titulo: "", subtitulo: "",
 		pedeNome: false, icone: <Feather name="box" size={24} color={tema.texto} />,
-	},
-	{
-		rotulo: "Resgatar", acao: "resgatar", titulo: "Resgatar da caixinha", subtitulo: "Voltar o dinheiro para a conta",
-		pedeNome: false, icone: <Feather name="unlock" size={24} color={tema.texto} />,
 	},
 	{
 		rotulo: "Empréstimo", acao: "contratar_emprestimo", titulo: "Empréstimo", subtitulo: "Contratar e receber na conta",
@@ -85,12 +83,14 @@ const FeaturesTab: React.FC = () => {
 						key={a.rotulo}
 						style={styles.item}
 						onPress={() =>
-							navigation.navigate("OperacaoPage", {
-								acao: a.acao,
-								titulo: a.titulo,
-								subtitulo: a.subtitulo,
-								pedeNome: a.pedeNome,
-							})
+							a.tela
+								? navigation.navigate(a.tela)
+								: navigation.navigate("OperacaoPage", {
+										acao: a.acao,
+										titulo: a.titulo,
+										subtitulo: a.subtitulo,
+										pedeNome: a.pedeNome,
+								  })
 						}
 					>
 						<View style={styles.circulo}>{a.icone}</View>

@@ -148,6 +148,25 @@ foreach ($comprasEmAberto as $c) {
 }
 $faturaAberta = round($faturaAberta, 2);
 
+// ── Caixinhas: aportes ao longo do tempo (saem da conta) ──────────────────
+// O saldo de cada caixinha é reconstruído aqui e o rendimento passa a correr a
+// partir do último aporte — o motor em dados.php credita os juros na abertura.
+$aportes = [
+    'Reserva de emergência' => [[73, 12000.00], [43, 6000.00], [13, 4000.00]],
+    'Viagem'                => [[59, 2500.00],  [29, 1200.00], [7,  800.00]],
+    'Trocar de carro'       => [[66, 9000.00],  [36, 4500.00], [6, 3000.00]],
+];
+$saldoCaixinhas = [];
+$ultimoAporte   = [];
+foreach ($aportes as $nomeCaixinha => $itens) {
+    foreach ($itens as $a) {
+        add($a[0], '09:30', 'guardar', 'Dinheiro guardado', $nomeCaixinha, 'Caixinha',
+            $a[1], 'saida', 'conta', 'lock');
+        $saldoCaixinhas[$nomeCaixinha] = ($saldoCaixinhas[$nomeCaixinha] ?? 0) + $a[1];
+        $ultimoAporte[$nomeCaixinha]   = min($ultimoAporte[$nomeCaixinha] ?? 999, $a[0]);
+    }
+}
+
 // ── Lançamento de abertura: fecha a conta no saldo exato ──────────────────
 $liquido = 0;
 foreach ($lancamentos as $l) {
@@ -163,6 +182,13 @@ add(75, '09:00', 'pix_recebido', 'Transferência recebida', 'Publish Digital', '
 
 // ── Grava ─────────────────────────────────────────────────────────────────
 db()->exec('TRUNCATE TABLE transacoes');
+
+// Caixinhas voltam ao valor dos aportes; o rendimento reinicia no último aporte.
+$upd = db()->prepare('UPDATE caixinhas SET saldo = ?, rendimento_acumulado = 0, ultimo_rendimento = ? WHERE nome = ?');
+foreach ($saldoCaixinhas as $nomeCaixinha => $valorGuardado) {
+    $desde = (new DateTime('today'))->modify('-' . $ultimoAporte[$nomeCaixinha] . ' days');
+    $upd->execute([round($valorGuardado, 2), $desde->format('Y-m-d'), $nomeCaixinha]);
+}
 $ins = db()->prepare(
     'INSERT INTO transacoes (tipo, titulo, contraparte, descricao, valor, sinal, origem, icone, data)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
@@ -177,6 +203,7 @@ ajustar_perfil([
     'fatura_atual'   => $faturaAberta,
     'rendimento_mes' => $rendimentos[count($rendimentos) - 1][1],
 ]);
+sincronizar_guardado();
 
 // ── Conferência ───────────────────────────────────────────────────────────
 $conta = db()->query("SELECT
@@ -195,6 +222,8 @@ printf("Crédito — compras no total: R$ %s (junho R$ %s + julho R$ %s, ambas p
     number_format($credito['total'], 2, ',', '.'),
     number_format($faturaJunho, 2, ',', '.'),
     number_format($faturaJulho, 2, ',', '.'));
+printf("Caixinhas — guardado: R$ %s (o rendimento é creditado na primeira abertura do app)\n",
+    number_format(array_sum($saldoCaixinhas), 2, ',', '.'));
 printf("Fatura em aberto: R$ %s | perfil: R$ %s %s\n",
     number_format($aberto['t'], 2, ',', '.'),
     number_format(perfil()['fatura_atual'], 2, ',', '.'),

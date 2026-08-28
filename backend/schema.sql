@@ -82,9 +82,26 @@ CREATE TABLE IF NOT EXISTS transacoes (
   descricao   VARCHAR(255)  DEFAULT NULL,
   valor       DECIMAL(14,2) NOT NULL,
   sinal       ENUM('entrada','saida') NOT NULL,
-  origem      ENUM('conta','credito') NOT NULL DEFAULT 'conta',
+  origem      ENUM('conta','credito','caixinha') NOT NULL DEFAULT 'conta',
   icone       VARCHAR(40)   NOT NULL DEFAULT 'dollar-sign',
   data        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_transacoes_data (data)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Caixinhas: cada uma guarda um valor separado do saldo e rende sozinha.
+CREATE TABLE IF NOT EXISTS caixinhas (
+  id                    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  nome                  VARCHAR(80)   NOT NULL,
+  icone                 VARCHAR(40)   NOT NULL DEFAULT 'box',
+  cor                   VARCHAR(9)    NOT NULL DEFAULT '#820AD1',
+  objetivo              DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  saldo                 DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  rendimento_acumulado  DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  percentual_cdi        DECIMAL(6,2)  NOT NULL DEFAULT 100.00,
+  rende                 TINYINT(1)    NOT NULL DEFAULT 1,
+  ultimo_rendimento     DATE          DEFAULT NULL,
+  ordem                 INT           NOT NULL DEFAULT 0,
+  criado_em             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

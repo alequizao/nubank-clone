@@ -47,6 +47,19 @@ if (!db()->query('SELECT id FROM cartoes LIMIT 1')->fetch()) {
     echo "Cartões iniciais criados.\n";
 }
 
+// ── Migração: origem 'caixinha' no extrato ────────────────────────────────
+db()->exec("ALTER TABLE transacoes MODIFY origem ENUM('conta','credito','caixinha') NOT NULL DEFAULT 'conta'");
+
+// ── Caixinhas iniciais ────────────────────────────────────────────────────
+if (!db()->query('SELECT id FROM caixinhas LIMIT 1')->fetch()) {
+    $ins = db()->prepare('INSERT INTO caixinhas (nome, icone, cor, objetivo, saldo, percentual_cdi, rende, ultimo_rendimento, ordem)
+                          VALUES (?, ?, ?, ?, ?, ?, 1, CURDATE(), ?)');
+    $ins->execute(['Reserva de emergência', 'shield',   '#820AD1', 30000.00, 0, 100.00, 1]);
+    $ins->execute(['Viagem',                'map-pin',  '#00A868', 12000.00, 0, 100.00, 2]);
+    $ins->execute(['Trocar de carro',       'truck',    '#F5A623', 60000.00, 0, 110.00, 3]);
+    echo "Caixinhas iniciais criadas.\n";
+}
+
 // ── Contatos para as simulações de Pix ────────────────────────────────────
 if (!db()->query('SELECT id FROM contatos LIMIT 1')->fetch()) {
     $ins = db()->prepare('INSERT INTO contatos (nome, chave, banco) VALUES (?, ?, ?)');

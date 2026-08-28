@@ -33,14 +33,7 @@ const Content: React.FC = () => {
 					name="Dinheiro guardado"
 					icon="dollar-sign"
 					value={reais(p?.guardado ?? 0)}
-					onPress={() =>
-						navigation.navigate("OperacaoPage", {
-							acao: "guardar",
-							titulo: "Guardar dinheiro",
-							subtitulo: "Separar um valor do saldo",
-							pedeNome: false,
-						})
-					}
+					onPress={() => navigation.navigate("CaixinhasPage")}
 				/>
 				<ArrowButton
 					name="Rendimento total da conta"
