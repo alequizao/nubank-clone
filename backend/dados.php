@@ -32,7 +32,7 @@ function contatos() {
     return db()->query('SELECT * FROM contatos ORDER BY nome')->fetchAll();
 }
 
-function transacoes($limite = 60) {
+function transacoes($limite = 300) {
     $st = db()->prepare('SELECT * FROM transacoes ORDER BY data DESC, id DESC LIMIT ?');
     $st->bindValue(1, (int) $limite, PDO::PARAM_INT);
     $st->execute();
