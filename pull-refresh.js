@@ -1,3 +1,7 @@
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /**
  * Puxar para atualizar (pull-to-refresh) no app web.
  * Como o app roda em tela cheia, o gesto do navegador não existe: este script

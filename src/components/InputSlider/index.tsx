@@ -1,3 +1,7 @@
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 import React, { useRef, useMemo } from "react";
 import { View, StyleSheet, Dimensions, Text } from "react-native";
 import { PanGestureHandler, State } from "react-native-gesture-handler";

@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 // Copie para config.php e ajuste. O config.php real NÃO vai para o repositório.
 define('DB_HOST', '127.0.0.1');
 define('DB_NAME', 'nubank');

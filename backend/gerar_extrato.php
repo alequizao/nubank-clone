@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /**
  * Gera um extrato completo e coerente: a soma de entradas menos saídas da conta
  * fecha exatamente com o saldo do perfil, e as compras no crédito fecham com a

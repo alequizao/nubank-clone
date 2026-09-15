@@ -1,3 +1,7 @@
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { carregarEstado, executarOperacao, DadosOperacao, Estado } from "../servicos/api";
 

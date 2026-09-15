@@ -1,3 +1,7 @@
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /** Conversa com o backend PHP (api.php), sempre na mesma origem/sessão. */
 
 export interface Perfil {

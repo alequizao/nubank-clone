@@ -1,3 +1,7 @@
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /** Formatação em português para os valores exibidos no app. */
 export function moeda(valor: number): string {
 	const n = Number.isFinite(valor) ? valor : 0;

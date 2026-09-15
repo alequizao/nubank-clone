@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 // Manifest do PWA servido na raiz do app (escopo correto em qualquer caminho).
 require_once __DIR__ . '/backend/config.php';
 header('Content-Type: application/manifest+json; charset=utf-8');

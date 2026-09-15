@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /**
  * Painel de personalização: edita tudo que o app mostra e permite
  * simular qualquer operação. Acesso restrito à sessão logada.

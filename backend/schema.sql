@@ -1,3 +1,5 @@
+-- Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+-- https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
 -- Nubank Clone - schema do banco `nubank`
 SET NAMES utf8mb4;
 

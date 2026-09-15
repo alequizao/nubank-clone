@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /**
  * Área Pix: chaves, BR Code (copia e cola), cobranças, agendamentos e limites.
  * As operações em si ficam em dados.php; aqui vive a parte específica do Pix.

@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /**
  * Camada de dados do app: leitura do estado e as operações simuladas
  * (Pix, transferência, pagamento, depósito, cartão, empréstimo...).

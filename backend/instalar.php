@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /**
  * Instalador: cria as tabelas do banco `nubank`, o usuário master e os
  * dados iniciais do perfil. Rodar de novo é seguro (não duplica).

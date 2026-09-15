@@ -1,4 +1,8 @@
 <?php
+/*
+ * Nubank Clone · Desenvolvido por Alequizao <alequizao.dev@gmail.com>
+ * https://github.com/alequizao · © 2026 Alequizao. Todos os direitos reservados.
+ */
 /**
  * Gera o QR Code de uma cobrança Pix (ou de um texto qualquer).
  * Uso: qr.php?id=<id da cobrança>  ou  qr.php?texto=<conteúdo>
